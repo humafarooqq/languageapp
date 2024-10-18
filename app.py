@@ -1,38 +1,36 @@
 import streamlit as st
-from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+from transformers import MBart50TokenizerFast, MBartForConditionalGeneration
 
-# Load model function
+# Load the tokenizer and model
+@st.cache_resource
 def load_model():
-    model_name = "Helsinki-NLP/opus-mt-en-ur"  # Ensure the model is available on Hugging Face
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
+    model_name = "abdulwaheed1/english-to-urdu-translation-mbart"
+    tokenizer = MBart50TokenizerFast.from_pretrained(model_name, src_lang="en_XX", tgt_lang="ur_PK")
+    model = MBartForConditionalGeneration.from_pretrained(model_name)
     return tokenizer, model
 
-# Load tokenizer and model
 tokenizer, model = load_model()
 
-# Streamlit app layout
-st.title("English to Roman Urdu Translator")
+# Title and description of the app
+st.title("English to Urdu Translator")
 st.markdown("<p style='color:blue; font-size:20px;'>Developed by Huma</p>", unsafe_allow_html=True)
-st.markdown("<p style='color:red; font-size:15px;'>Powered by Hugging Face Model</p>", unsafe_allow_html=True)
+st.markdown("<p style='color:red; font-size:15px;'>Using fine-tuned MBart model for translation</p>", unsafe_allow_html=True)
 
-# Input for text
-input_text = st.text_area("Enter English text to translate into Roman Urdu:", height=200)
+# Input text area for user input
+input_text = st.text_area("Enter English text to translate:", height=200)
 
-# Button for translation
+# Button to trigger translation
 if st.button("Translate"):
     if input_text:
-        # Tokenize input text
-        inputs = tokenizer.encode(input_text, return_tensors="pt", truncation=True)
+        # Tokenize and translate the input text
+        inputs = tokenizer(input_text, return_tensors="pt", truncation=True)
+        outputs = model.generate(inputs['input_ids'], max_length=100, num_beams=4, early_stopping=True)
         
-        # Generate translation using model
-        outputs = model.generate(inputs, max_length=100, num_beams=4, early_stopping=True)
+        # Decode the translated text
+        translated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
         
-        # Decode translation
-        translation = tokenizer.decode(outputs[0], skip_special_tokens=True)
-        
-        # Display translation result
-        st.subheader("Translation in Roman Urdu:")
-        st.write(translation)
+        # Display the translated text
+        st.subheader("Translation in Urdu:")
+        st.write(translated_text)
     else:
         st.error("Please enter some text to translate.")
