@@ -1,8 +1,7 @@
-# app.py
 import streamlit as st
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
-# Load the Hugging Face translation model and tokenizer
+# Load the Hugging Face translation model and tokenizer with caching
 @st.cache_resource
 def load_model():
     model_name = "Helsinki-NLP/opus-mt-en-ur"  # Pretrained model for English to Urdu translation
@@ -10,6 +9,7 @@ def load_model():
     model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
     return tokenizer, model
 
+# Load the model and tokenizer
 tokenizer, model = load_model()
 
 # Set up the Streamlit app title and description
@@ -37,4 +37,3 @@ if st.button("Translate"):
         st.write(translation)
     else:
         st.error("Please enter some text to translate.")
-
